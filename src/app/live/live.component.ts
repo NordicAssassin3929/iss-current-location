@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {ApiService} from '../api.service';
 import {ISS} from '../model/ISS';
+import {Geo} from '../model/Geo';
 
 @Component({
   selector: 'app-live',
@@ -11,24 +12,45 @@ export class LiveComponent implements OnInit {
 
   coordinates: ISS;
   time: string;
+  location: Geo;
 
   constructor(private apiService: ApiService) {
   }
 
   ngOnInit() {
-    this.refreshData();
+    this.retrievePosition();
     setInterval(() => {
-      this.refreshData();
-    }, 5000);
+      this.retrievePosition();
+      this.getLocationOnEarth(
+        this.coordinates.iss_position.longitude,
+        this.coordinates.iss_position.latitude
+      );
+    }, 10000);
   }
 
-  refreshData() {
-    this.apiService.getInformation().subscribe(
+  retrievePosition() {
+    this.apiService.getISSInformation().subscribe(
       (data: any) => {
         this.coordinates = data;
+        this.getLocationOnEarth(
+          data.iss_position.longitude,
+          data.iss_position.latitude
+        );
         this.time = this.getTime(data);
       }
     );
+  }
+
+  getLocationOnEarth(longitude, latitude) {
+    this.apiService.getLocation(
+      longitude,
+      latitude)
+      .subscribe(
+        (data: any) => {
+          console.log(data);
+          this.location = data;
+        }
+      );
   }
 
   getTime(data: ISS): string {
